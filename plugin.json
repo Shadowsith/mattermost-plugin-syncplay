@@ -1,0 +1,51 @@
+{
+    "id": "syncplay",
+    "name": "Syncplay",
+    "description": "",
+    "homepage_url": "https://github.com/Shadowsith/mattermost-plugin-syncplay",
+    "support_url": "https://github.com/Shadowsith/mattermost-plugin-syncplay",
+    "release_notes_url": "",
+    "version": "1.0.0",
+    "min_server_version": "6.2.1",
+    "server": {
+        "executables": {
+            "linux-amd64": "server/plugin-linux-amd64",
+            "darwin-amd64": "server/plugin-darwin-amd64",
+            "windows-amd64": "server/plugin-windows-amd64.exe"
+        }
+    },
+    "settings_schema": {
+        "settings": [
+            {
+                "key": "url",
+                "display_name": "Syncplay Webhook Url",
+                "type": "text",
+                "help_text": "Synplay webhook url. Please add http or https prefix",
+                "placeholder": "",
+                "default": ""
+            },
+            {
+                "key": "port",
+                "display_name": "Webhook Port",
+                "type": "number",
+                "help_text": "Syncplay webhook port",
+                "placeholder": "8080",
+                "default": 8080
+            },
+            {
+                "key": "default_room",
+                "display_name": "Default room",
+                "type": "text",
+                "help_text": "Set default syncplay room",
+                "default": ""
+            },
+            {
+                "key": "chat_response",
+                "display_name": "Chat response",
+                "type": "bool",
+                "help_text": "Enable or disable chat response after command",
+                "default": "true"
+            }
+        ]
+    }
+}
