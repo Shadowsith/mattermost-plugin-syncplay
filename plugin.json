@@ -5,7 +5,7 @@
     "homepage_url": "https://github.com/Shadowsith/mattermost-plugin-syncplay",
     "support_url": "https://github.com/Shadowsith/mattermost-plugin-syncplay",
     "release_notes_url": "",
-    "version": "1.0.0",
+    "version": "1.1.0",
     "min_server_version": "6.2.1",
     "server": {
         "executables": {
@@ -45,6 +45,20 @@
                 "type": "bool",
                 "help_text": "Enable or disable chat response after command",
                 "default": "true"
+            },
+            {
+                "key": "enable_bot_user",
+                "display_name": "Enable bot user",
+                "type": "bool",
+                "help_text": "Enable or disable if a bot user should answer to the /syncplay command",
+                "default": "false"
+            },
+            {
+                "key": "bot_user",
+                "display_name": "Bot username",
+                "type": "text",
+                "help_text": "Set bot user name (case sensetive), bot must exist!",
+                "default": ""
             }
         ]
     }

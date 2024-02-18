@@ -17,10 +17,12 @@ type SyncplayPlugin struct {
 }
 
 type PluginSettings struct {
-	Url          string `json:"url"`
-	Port         int    `json:"port"`
-	DefaultRoom  string `json:"default_room"`
-	ChatResponse bool   `json:"chat_response"`
+	Url           string `json:"url"`
+	Port          int    `json:"port"`
+	DefaultRoom   string `json:"default_room"`
+	ChatResponse  bool   `json:"chat_response"`
+	EnableBotUser bool   `json:"enable_bot_user"`
+	BotUser       string `json:"bot_user"`
 }
 
 func (p *SyncplayPlugin) ExecuteCommand(c *plugin.Context, args *model.CommandArgs) (*model.CommandResponse, *model.AppError) {
@@ -78,15 +80,28 @@ func (p *SyncplayPlugin) ExecuteCommand(c *plugin.Context, args *model.CommandAr
 			return &model.CommandResponse{}, nil
 		}
 
+		userId := args.UserId
+		username, err := p.getUsernameByUserId(args.UserId)
+		if err != nil {
+			username = "some user"
+		}
+		if settings.EnableBotUser {
+			if settings.BotUser != "" {
+				userId, err = p.getBotUserIdByName(settings.BotUser)
+				if err != nil {
+					userId = args.UserId
+				}
+			}
+		}
+
 		if settings.ChatResponse {
 
 			post := &model.Post{
-				UserId:    args.UserId,
+				UserId:    userId,
 				ChannelId: args.ChannelId,
-				Message:   fmt.Sprintf("Url %s successfully inserted in room %s", videoUrl, room),
+				Message:   fmt.Sprintf("Url %s successfully inserted in room %s by @%s", videoUrl, room, username),
 			}
 
-			// Sende die Nachricht
 			if _, err := p.API.CreatePost(post); err != nil {
 				return nil, model.NewAppError("ExecuteCommand", "Unable to post message", nil, err.Error(), http.StatusInternalServerError)
 			}
@@ -135,6 +150,38 @@ func (p *SyncplayPlugin) OnActivate() error {
 	return nil
 }
 
+func (p *SyncplayPlugin) getBotUserIdByName(botName string) (string, error) {
+	// Sucht nach Benutzern mit dem gegebenen Benutzernamen
+	users, appErr := p.API.GetUsersByUsernames([]string{botName})
+	if appErr != nil {
+		return "", appErr
+	}
+
+	if len(users) == 0 {
+		return "", nil
+	}
+
+	if !users[0].IsBot {
+		return "", nil
+	}
+
+	return users[0].Id, nil
+}
+
+func (p *SyncplayPlugin) getUsernameByUserId(userId string) (string, error) {
+	// Abrufen der Benutzerinformationen anhand der UserId
+	user, appErr := p.API.GetUser(userId)
+	if appErr != nil {
+		return "", appErr
+	}
+
+	if user == nil {
+		return "", nil
+	}
+
+	return user.Username, nil
+}
+
 func (p *SyncplayPlugin) getSettings() PluginSettings {
 	pluginSettings, ok := p.API.GetConfig().PluginSettings.Plugins["syncplay"]
 	if !ok {
@@ -142,10 +189,12 @@ func (p *SyncplayPlugin) getSettings() PluginSettings {
 	}
 
 	settings := PluginSettings{
-		Url:          p.getStrVal(pluginSettings["url"]),
-		Port:         p.getIntVal(pluginSettings["port"]),
-		DefaultRoom:  p.getStrVal(pluginSettings["default_room"]),
-		ChatResponse: p.getBoolVal(pluginSettings["chat_response"]),
+		Url:           p.getStrVal(pluginSettings["url"]),
+		Port:          p.getIntVal(pluginSettings["port"]),
+		DefaultRoom:   p.getStrVal(pluginSettings["default_room"]),
+		ChatResponse:  p.getBoolVal(pluginSettings["chat_response"]),
+		EnableBotUser: p.getBoolVal(pluginSettings["enable_bot_user"]),
+		BotUser:       p.getStrVal(pluginSettings["bot_user"]),
 	}
 
 	return settings
@@ -153,10 +202,12 @@ func (p *SyncplayPlugin) getSettings() PluginSettings {
 
 func (p *SyncplayPlugin) getDefaultSettings() PluginSettings {
 	return PluginSettings{
-		Url:          "",
-		Port:         0,
-		DefaultRoom:  "",
-		ChatResponse: true,
+		Url:           "",
+		Port:          0,
+		DefaultRoom:   "",
+		ChatResponse:  true,
+		EnableBotUser: false,
+		BotUser:       "",
 	}
 }
 
